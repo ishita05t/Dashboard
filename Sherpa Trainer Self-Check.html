@@ -1,0 +1,1530 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Sherpa Trainer Self-Check</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky identity bar + tab rail over one 1180px column; every tab is a stack of
+   labelled blocks — summary tiles first, then detail, then evidence. */
+:root{
+  --bg:#FBF8F8; --surface:#FFFFFF; --surface-2:#F5EFF0; --ink:#1B1316; --ink-2:#4B3B3F;
+  --muted:#776669; --line:#EAE1E2; --line-2:#D8CACC;
+  --accent:#8A1B2E; --accent-ink:#6D1223; --accent-wash:#F7E9EB;
+  --strong:#1D7254; --ok:#2F6F93; --watch:#8E6411; --weak:#BE5A1C; --critical:#A81426;
+  --strong-w:#E3F0E9; --ok-w:#E4EEF4; --watch-w:#F6EBD5; --weak-w:#FAE9DB; --critical-w:#F9E3E5;
+  --shadow:0 1px 2px rgba(27,19,22,.05), 0 10px 26px -18px rgba(27,19,22,.24);
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"Public Sans","Helvetica Neue",Arial,sans-serif;
+  --data:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:10px; --maxw:1180px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141011; --surface:#1C1618; --surface-2:#241B1E; --ink:#F0EAEB; --ink-2:#CEC2C4;
+  --muted:#9C8B8E; --line:#312628; --line-2:#413234;
+  --accent:#CE5068; --accent-ink:#EC8E9D; --accent-wash:#331319;
+  --strong:#64C398; --ok:#7CB8D8; --watch:#D7A74A; --weak:#E79A63; --critical:#EC6F7E;
+  --strong-w:#13301F; --ok-w:#122833; --watch-w:#2E2512; --weak-w:#331F12; --critical-w:#38161B;
+  --shadow:0 1px 2px rgba(0,0,0,.45), 0 10px 26px -18px rgba(0,0,0,.65);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#141011; --surface:#1C1618; --surface-2:#241B1E; --ink:#F0EAEB; --ink-2:#CEC2C4;
+  --muted:#9C8B8E; --line:#312628; --line-2:#413234;
+  --accent:#CE5068; --accent-ink:#EC8E9D; --accent-wash:#331319;
+  --strong:#64C398; --ok:#7CB8D8; --watch:#D7A74A; --weak:#E79A63; --critical:#EC6F7E;
+  --strong-w:#13301F; --ok-w:#122833; --watch-w:#2E2512; --weak-w:#331F12; --critical-w:#38161B;
+  --shadow:0 1px 2px rgba(0,0,0,.45), 0 10px 26px -18px rgba(0,0,0,.65);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--surface)}
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;letter-spacing:-.015em;margin:0;text-wrap:balance}
+p{margin:0}
+a{color:var(--accent-ink)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-family:var(--data);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--body);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- identity bar ---------- */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar-in{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.mark{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;
+  font-family:var(--display);font-weight:700;font-size:17px;flex:none}
+.brand-txt{min-width:0}
+.brand-txt strong{display:block;font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.brand-txt span{display:block;font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mgr{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:999px;padding:5px 14px 5px 6px}
+.av{width:28px;height:28px;border-radius:50%;background:var(--accent-wash);color:var(--accent-ink);
+  display:grid;place-items:center;font-family:var(--display);font-size:11.5px;font-weight:700;flex:none;
+  border:1px solid var(--line-2)}
+.mgr-txt{line-height:1.25}
+.mgr-txt .k{display:block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mgr-txt .v{display:block;font-size:13px;font-weight:600;color:var(--ink)}
+.btn{font-family:var(--body);font-size:13px;font-weight:600;border-radius:8px;border:1px solid var(--line-2);
+  background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{border-color:var(--accent);color:var(--accent-ink)}
+.btn-pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-pri:hover{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff}
+.btn:focus-visible,.tab:focus-visible,summary:focus-visible,.chip:focus-visible,input:focus-visible,
+textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- who am i strip ---------- */
+.whoami{background:var(--surface);border-bottom:1px solid var(--line)}
+.whoami-in{display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap;padding-block:16px 18px}
+.whoami h1{font-size:clamp(21px,3.4vw,27px)}
+.whoami .sub{font-size:13.5px;color:var(--muted);margin-top:3px}
+.facts{margin-left:auto;display:flex;gap:22px;flex-wrap:wrap}
+.fact .k{display:block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.fact .v{display:block;font-family:var(--data);font-size:13px;color:var(--ink-2);margin-top:2px}
+
+/* ---------- tabs ---------- */
+.tabbar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 59px);z-index:29;background:var(--bg);
+  border-bottom:1px solid var(--line)}
+.tabbar-in{display:flex;gap:4px;align-items:center;overflow-x:auto;scrollbar-width:none}
+.tabbar-in::-webkit-scrollbar{display:none}
+.tab{font-family:var(--display);font-size:13.5px;font-weight:600;letter-spacing:-.005em;white-space:nowrap;
+  background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:13px 13px 11px;cursor:pointer}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--accent-ink);border-bottom-color:var(--accent)}
+.tab .cnt{font-family:var(--data);font-size:11px;color:var(--muted);margin-left:5px}
+.tab-help{margin-left:auto;padding-left:16px}
+
+/* ---------- blocks ---------- */
+main{padding-block:26px 64px}
+.block{margin-bottom:34px}
+.block-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.block-head h2{font-size:17px}
+.block-head .note{font-size:12.5px;color:var(--muted);margin-left:auto}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.pad{padding:18px}
+
+/* insights */
+.insights{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(255px,1fr))}
+.ins{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:var(--r);padding:15px 16px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.ins.is-watch{border-left-color:var(--watch)}
+.ins.is-weak{border-left-color:var(--weak)}
+.ins.is-good{border-left-color:var(--strong)}
+.ins h3{font-size:14px;line-height:1.3}
+.ins p{font-size:13px;color:var(--ink-2)}
+.ins .src{font-family:var(--data);font-size:10.5px;color:var(--muted);margin-top:auto}
+
+/* metric tiles */
+.metrics{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(238px,1fr))}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:17px 18px 16px;
+  display:flex;flex-direction:column;gap:6px;min-width:0}
+.metric .lbl{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.metric .big{font-family:var(--display);font-variant-numeric:tabular-nums;font-size:34px;font-weight:700;
+  line-height:1;letter-spacing:-.025em;color:var(--ink)}
+.metric .big small{font-size:15px;font-weight:600;color:var(--muted);letter-spacing:0}
+.metric .delta{font-family:var(--data);font-size:11.5px;color:var(--muted)}
+.metric .delta b{font-weight:500;color:var(--strong)}
+.metric .delta b.dn{color:var(--weak)}
+.metric .desc{font-size:12.5px;color:var(--ink-2);line-height:1.5;border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+
+/* dimension bars */
+.dims{display:flex;flex-direction:column;gap:0}
+.dim{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(130px,2fr) auto;gap:16px;align-items:center;
+  padding:13px 0;border-bottom:1px solid var(--line)}
+.dim:last-child{border-bottom:0}
+.dim .nm{font-size:13.5px;font-weight:600;min-width:0}
+.dim .nm em{display:block;font-style:normal;font-size:11.5px;font-weight:400;color:var(--muted)}
+.track{position:relative;height:9px;border-radius:999px;background:var(--surface-2);overflow:hidden;min-width:0}
+.track i{position:absolute;inset:0 auto 0 0;border-radius:999px;display:block}
+.dim .sc{font-family:var(--data);font-variant-numeric:tabular-nums;font-size:13px;width:52px;text-align:right}
+.axis{display:flex;justify-content:space-between;font-family:var(--data);font-size:10.5px;color:var(--muted);
+  padding-top:4px;border-top:1px dashed var(--line);margin-top:4px}
+
+/* dimension read */
+.reads{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.read{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 17px;min-width:0}
+.read-top{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.read-top h3{font-size:14px;flex:1;min-width:0}
+.read dl{margin:0;display:flex;flex-direction:column;gap:9px}
+.read dt{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.read dd{margin:2px 0 0;font-size:13px;color:var(--ink-2)}
+.read .do{border-top:1px solid var(--line);margin-top:12px;padding-top:11px;font-size:13px}
+.read .do b{font-family:var(--display);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);display:block;margin-bottom:3px}
+
+/* persona */
+.persona{display:grid;gap:14px;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.pcard .tagrow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:4px}
+.pcard h3{font-size:19px;letter-spacing:-.02em}
+.pcard .pdesc{font-size:13.5px;color:var(--ink-2);margin-top:7px}
+.conf{display:flex;align-items:center;gap:10px;margin-top:14px}
+.conf .track{flex:1}
+.conf .num{font-size:12.5px}
+.quotes{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.quotes li{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--line-2);padding:1px 0 1px 11px}
+.quotes li span{font-family:var(--data);font-size:11px;color:var(--muted);display:block}
+.pside{display:flex;flex-direction:column;gap:12px;min-width:0}
+.mini{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px}
+.mini h4{font-size:12.5px;margin-bottom:6px}
+.mini p{font-size:12.5px;color:var(--ink-2)}
+.pscale{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.pscale li{display:grid;grid-template-columns:minmax(0,1fr) 72px auto;gap:10px;align-items:center;font-size:12.5px}
+.pscale .track{height:7px}
+.pscale .num{font-size:11.5px;color:var(--muted);text-align:right}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--body);font-size:11px;font-weight:600;
+  letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:3px 9px;border:1px solid transparent;white-space:nowrap}
+.p-strong{background:var(--strong-w);color:var(--strong);border-color:var(--strong)}
+.p-ok{background:var(--ok-w);color:var(--ok);border-color:var(--ok)}
+.p-watch{background:var(--watch-w);color:var(--watch);border-color:var(--watch)}
+.p-weak{background:var(--weak-w);color:var(--weak);border-color:var(--weak)}
+.p-critical{background:var(--critical-w);color:var(--critical);border-color:var(--critical)}
+.p-mute{background:var(--surface-2);color:var(--muted);border-color:var(--line-2)}
+.p-acc{background:var(--accent-wash);color:var(--accent-ink);border-color:var(--accent)}
+
+/* session library */
+.sess-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.field{font-family:var(--body);font-size:13px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line-2);border-radius:8px;padding:8px 11px}
+.field::placeholder{color:var(--muted)}
+.sess{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.sess-row{display:grid;grid-template-columns:116px minmax(0,1.9fr) repeat(4,minmax(62px,.7fr)) auto;
+  gap:14px;align-items:center;padding:14px 16px}
+.sess-when .d{font-family:var(--data);font-size:12.5px;font-weight:500}
+.sess-when .t{font-family:var(--data);font-size:11px;color:var(--muted)}
+.sess-what{min-width:0}
+.sess-what .tp{font-size:13.5px;font-weight:600;line-height:1.3}
+.sess-what .bt{font-size:11.5px;color:var(--muted);margin-top:2px}
+.cell .k{display:block;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.cell .v{display:block;font-family:var(--data);font-variant-numeric:tabular-nums;font-size:13px;margin-top:2px}
+.cell .v.warn{color:var(--weak)}
+.disc{background:none;border:1px solid var(--line-2);border-radius:8px;color:var(--ink-2);cursor:pointer;
+  font-family:var(--body);font-size:12px;font-weight:600;padding:7px 11px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.disc:hover{border-color:var(--accent);color:var(--accent-ink)}
+.disc svg{transition:transform .18s ease}
+.sess.open .disc svg{transform:rotate(180deg)}
+.sess-body{border-top:1px solid var(--line);background:var(--surface-2);padding:16px}
+.sess-body-grid{display:grid;gap:16px;align-items:start;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+.tx{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:0;min-width:0}
+.tx-head{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tx-head h4{font-size:12.5px}
+.tx-head .meta{font-family:var(--data);font-size:10.5px;color:var(--muted);margin-left:auto}
+.tx-scroll{max-height:380px;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:11px}
+.turn{display:grid;grid-template-columns:52px minmax(0,1fr);gap:11px;font-size:13px}
+.turn .ts{font-family:var(--data);font-size:11px;color:var(--muted);padding-top:2px}
+.turn .sp{display:block;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:1px}
+.turn.trainee .sp{color:var(--muted)}
+.turn p{color:var(--ink-2)}
+.ev{display:flex;flex-direction:column;gap:9px;min-width:0}
+.ev-item{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:11px 12px}
+.ev-item .top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ev-item .ts{font-family:var(--data);font-size:11px;color:var(--muted)}
+.ev-item .lb{font-size:12.5px;font-weight:600;line-height:1.3}
+.ev-item q{display:block;font-size:12.5px;color:var(--ink-2);font-style:italic;margin:4px 0}
+.ev-item .why{font-size:12px;color:var(--muted)}
+
+/* habits */
+.two{display:grid;gap:14px;align-items:start;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.gap-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,1.4fr) auto;gap:14px;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--line)}
+.gap-row:last-child{border-bottom:0}
+.gap-row .nm{font-size:13px;min-width:0}
+.gap-row .nm em{display:block;font-style:normal;font-size:11px;color:var(--muted)}
+.gap-row .pc{font-family:var(--data);font-variant-numeric:tabular-nums;font-size:12.5px;width:46px;text-align:right}
+.hist{display:flex;align-items:flex-end;gap:10px;height:168px;padding-top:8px;
+  background:linear-gradient(to top,var(--line) 1px,transparent 1px) 0 0/100% 33.33% repeat-y}
+.hbar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;min-width:0;height:100%}
+.hbar .cn{font-family:var(--data);font-variant-numeric:tabular-nums;font-size:12px;color:var(--ink-2)}
+.hbar i{display:block;width:100%;border-radius:4px 4px 0 0;background:var(--line-2);min-height:3px}
+.hbar.me i{background:var(--accent)}
+.hlab{display:flex;gap:10px;margin-top:9px;border-top:1px solid var(--line-2);padding-top:7px}
+.hlab span{flex:1;font-family:var(--data);font-size:10.5px;color:var(--muted);text-align:center;min-width:0}
+.hnote{font-size:12.5px;color:var(--muted);margin-top:12px}
+.sig-tools{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.chip{font-family:var(--body);font-size:12px;font-weight:600;background:var(--surface);color:var(--ink-2);
+  border:1px solid var(--line-2);border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.sig{border-bottom:1px solid var(--line)}
+.sig:last-child{border-bottom:0}
+.sig summary{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.2fr) 96px 86px auto;gap:14px;
+  align-items:center;padding:13px 16px;cursor:pointer;list-style:none}
+.sig summary::-webkit-details-marker{display:none}
+.sig summary:hover{background:var(--surface-2)}
+.sig .snm{font-size:13.5px;font-weight:600;min-width:0}
+.sig .scat{font-size:11.5px;color:var(--muted);min-width:0}
+.sig .sscore{font-family:var(--data);font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--ink-2)}
+.sig .chev{color:var(--muted);display:grid;place-items:center}
+.sig[open] .chev svg{transform:rotate(180deg)}
+.sig-body{padding:0 16px 16px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.sig-body .cellbox{min-width:0}
+.sig-body dt{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sig-body dd{margin:3px 0 0;font-size:13px;color:var(--ink-2)}
+.nudge{background:var(--accent-wash);border:1px solid var(--line);border-radius:8px;padding:11px 13px}
+.nudge dt{color:var(--accent-ink)}
+.nudge dd{color:var(--ink)}
+
+/* device */
+.dev{display:grid;gap:14px;align-items:start;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0}
+.spec > div{padding:13px 16px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);min-width:0}
+.spec dt{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.spec dd{margin:3px 0 0;font-family:var(--data);font-size:13px;color:var(--ink);word-break:break-word}
+.spec dd.txt{font-family:var(--body)}
+.devhead{display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.devglyph{width:46px;height:46px;border-radius:12px;background:var(--accent-wash);border:1px solid var(--line-2);
+  display:grid;place-items:center;color:var(--accent-ink);flex:none}
+.devhead h3{font-size:15px}
+.devhead .sub{font-family:var(--data);font-size:11.5px;color:var(--muted)}
+.log{list-style:none;margin:0;padding:0}
+.log li{display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:11px;align-items:center;
+  padding:10px 16px;border-bottom:1px solid var(--line);font-size:12.5px}
+.log li:last-child{border-bottom:0}
+.log .ts{font-family:var(--data);font-size:11px;color:var(--muted)}
+.log .ev2{min-width:0;color:var(--ink-2)}
+.bat{display:flex;align-items:center;gap:9px}
+.bat .shell{display:inline-block;width:46px;height:16px;border:1.5px solid var(--line-2);border-radius:4px;padding:2px;position:relative;vertical-align:middle}
+.bat .shell::after{content:"";position:absolute;right:-5px;top:4px;width:3px;height:6px;background:var(--line-2);border-radius:0 2px 2px 0}
+.bat .fill{display:block;height:100%;border-radius:2px;background:var(--strong)}
+
+/* help */
+.help-grid{display:grid;gap:14px;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}
+.hact{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;text-align:left;
+  cursor:pointer;font-family:var(--body);display:flex;flex-direction:column;gap:5px;min-width:0}
+.hact:hover{border-color:var(--accent)}
+.hact strong{font-family:var(--display);font-size:14px;font-weight:600}
+.hact span{font-size:12.5px;color:var(--muted)}
+.qf summary{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;list-style:none;font-size:13.5px}
+.qf summary::-webkit-details-marker{display:none}
+.qf{border-bottom:1px solid var(--line)}
+.qf:last-child{border-bottom:0}
+.qf summary:hover{background:var(--surface-2)}
+.qf summary .chev{margin-left:auto;color:var(--muted)}
+.qf[open] .chev svg{transform:rotate(180deg)}
+.qf-body{padding:0 16px 15px;font-size:13px;color:var(--ink-2);max-width:68ch}
+.qf-body ol{margin:7px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px}
+.req{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.req:last-child{border-bottom:0}
+.req .t{font-size:13.5px;font-weight:600}
+.req .m{font-family:var(--data);font-size:11px;color:var(--muted);margin-top:2px}
+form.sup{display:flex;flex-direction:column;gap:15px}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.chipset{display:flex;gap:7px;flex-wrap:wrap}
+textarea.field{width:100%;min-height:78px;resize:vertical;font-family:var(--body)}
+.auto{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.auto .pill{text-transform:none;letter-spacing:0;font-weight:500;font-size:11px}
+.sent{text-align:center;padding:26px 18px}
+.sent .tick{width:44px;height:44px;border-radius:50%;background:var(--strong-w);color:var(--strong);
+  display:grid;place-items:center;margin:0 auto 12px;border:1px solid var(--strong)}
+.sent h3{font-size:17px}
+.sent p{font-size:13.5px;color:var(--ink-2);margin-top:6px;max-width:46ch;margin-inline:auto}
+.steps{list-style:none;margin:20px auto 0;padding:0;max-width:330px;text-align:left;display:flex;flex-direction:column;gap:0}
+.steps li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:11px;padding:9px 0;font-size:13px}
+.steps .dot{width:11px;height:11px;border-radius:50%;border:2px solid var(--line-2);margin:4px auto 0}
+.steps li.done .dot{background:var(--strong);border-color:var(--strong)}
+.steps li.now .dot{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-wash)}
+.steps .st{font-weight:600}
+.steps .sd{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.contactbox{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.copyline{display:flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:8px;padding:8px 12px;font-family:var(--data);font-size:13px;min-width:0}
+.copyline span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copybtn{margin-left:auto;font-size:11px;font-weight:600;font-family:var(--body);background:none;border:1px solid var(--line-2);
+  border-radius:6px;padding:4px 9px;cursor:pointer;color:var(--ink-2);white-space:nowrap}
+.copybtn:hover{border-color:var(--accent);color:var(--accent-ink)}
+.privacy{display:flex;gap:10px;align-items:flex-start;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:var(--r);padding:13px 15px;font-size:12.5px;color:var(--ink-2);margin-bottom:26px}
+.privacy svg{flex:none;color:var(--accent-ink);margin-top:1px}
+.foot{border-top:1px solid var(--line);margin-top:10px;padding-top:16px;font-size:11.5px;color:var(--muted)}
+.scroller{overflow-x:auto}
+
+@media (max-width:900px){
+  .persona,.dev,.sess-body-grid{grid-template-columns:1fr}
+  .help-grid{grid-template-columns:1fr}
+}
+@media (max-width:780px){
+  .sess-row{grid-template-columns:1fr 1fr;gap:12px}
+  .sess-when{grid-column:1/-1}
+  .sess-what{grid-column:1/-1}
+  .sess-row .disc{grid-column:1/-1;justify-content:center}
+  .sig summary{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .sig .scat,.sig .sscore{display:none}
+  .dim{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .dim .track{grid-column:1/-1}
+  .facts{margin-left:0;gap:16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">S</div>
+      <div class="brand-txt">
+        <strong>Sherpa &middot; Trainer</strong>
+        <span>ABSLI Learning &amp; Development &middot; Prototype</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="mgr" title="Your reporting manager for this cycle">
+        <div class="av" aria-hidden="true">SM</div>
+        <div class="mgr-txt">
+          <span class="k">Reporting manager</span>
+          <span class="v">Shalini Mehra</span>
+        </div>
+      </div>
+      <button class="btn" type="button" data-goto="help">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .9-1 1.6v.3"/><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"/></svg>
+        Help
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="whoami">
+  <div class="wrap whoami-in">
+    <div>
+      <h1>Your session self-check</h1>
+      <p class="sub">A private read of how your sessions are landing &mdash; built only from behaviour observed in your own recordings.</p>
+    </div>
+    <div class="facts">
+      <div class="fact"><span class="k">Trainer</span><span class="v">Yayati Deshmukh</span></div>
+      <div class="fact"><span class="k">Trainer ID</span><span class="v">user1.absli</span></div>
+      <div class="fact"><span class="k">Channel</span><span class="v">Agency &mdash; Protection</span></div>
+      <div class="fact"><span class="k">Cycle</span><span class="v">01 Oct &ndash; 28 Oct 2026</span></div>
+    </div>
+  </div>
+</section>
+
+<nav class="tabbar" aria-label="Sections">
+  <div class="wrap tabbar-in" role="tablist">
+    <button class="tab" role="tab" id="tab-self" aria-controls="panel-self" aria-selected="true" data-tab="self-check">Self-check</button>
+    <button class="tab" role="tab" id="tab-sessions" aria-controls="panel-sessions" aria-selected="false" data-tab="sessions">Session library<span class="cnt">71</span></button>
+    <button class="tab" role="tab" id="tab-habits" aria-controls="panel-habits" aria-selected="false" data-tab="habits">Habits &amp; progress</button>
+    <button class="tab" role="tab" id="tab-device" aria-controls="panel-device" aria-selected="false" data-tab="device">Device details</button>
+    <button class="tab tab-help" role="tab" id="tab-help" aria-controls="panel-help" aria-selected="false" data-tab="help">Help &amp; support<span class="cnt">2</span></button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ============ 1. SELF-CHECK ============ -->
+<div id="panel-self" role="tabpanel" aria-labelledby="tab-self">
+
+  <div class="privacy">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.3-2.9 8.1-7 9.5-4.1-1.4-7-5.2-7-9.5V6l7-3z"/><path d="M9.2 12.2l2 2 3.6-3.9"/></svg>
+    <p>This view is yours. Shalini sees your cycle summary and the four metrics below &mdash; she does not see your transcripts, evidence clips or anything you write in Help &amp; support.</p>
+  </div>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Insights</h2>
+      <p class="note">Four patterns that repeat across more than one session</p>
+    </div>
+    <div class="insights">
+      <article class="ins is-weak">
+        <h3>Role-plays start, debriefs don't</h3>
+        <p>You opened a practice round in 17 of 28 scored sessions, but the debrief ran under 30% of the role-play time in 15 of them. The learning usually lands in the debrief, not the round.</p>
+        <p class="src">Role-Play Debrief Duration &middot; 15/17 sessions</p>
+      </article>
+      <article class="ins is-weak">
+        <h3>Closing recap is the single biggest gap</h3>
+        <p>41% of your sessions ended without a recap or knowledge check. This is the one fix that moves three signals at once &mdash; recap frequency, session close quality and takeaway consolidation.</p>
+        <p class="src">Recap Frequency &middot; Session Close Quality</p>
+      </article>
+      <article class="ins is-watch">
+        <h3>Afternoon slots score lower than your morning ones</h3>
+        <p>Your 12:00&ndash;16:00 sessions average 31.4 on the ABSLI grid against 42.1 before noon, on similar content. Worth testing one harder topic moved to a morning slot.</p>
+        <p class="src">43 afternoon sessions &middot; 19 morning</p>
+      </article>
+      <article class="ins is-good">
+        <h3>Your pace and clarity are a strength to keep</h3>
+        <p>Dead air is near zero and filler words sit at 0.66% &mdash; well inside the healthy band. Trainees rarely ask you to repeat a concept. Build the gaps above on top of this, don't trade it away.</p>
+        <p class="src">Filler Word Rate &middot; Dead Air &middot; Repeat Explanation</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Metrics</h2>
+      <p class="note">This cycle &middot; against your previous 10-session block</p>
+    </div>
+    <div class="metrics">
+      <article class="metric">
+        <span class="lbl">Total touchpoints</span>
+        <span class="big">71</span>
+        <span class="delta"><b>+9</b> vs last block</span>
+        <p class="desc">Total calls recorded on your Sherpa Core this cycle &mdash; every training session that reached the platform, whether or not it could be scored.</p>
+      </article>
+      <article class="metric">
+        <span class="lbl">Improvement themes</span>
+        <span class="big">4</span>
+        <span class="delta"><b class="dn">1 new</b> this cycle</span>
+        <p class="desc">Signal areas where the same gap shows up in three or more sessions, so it reads as a habit rather than one off day: debrief depth, closing recap, corrective feedback, wait time.</p>
+      </article>
+      <article class="metric">
+        <span class="lbl">High-quality sessions</span>
+        <span class="big">28<small> / 71</small></span>
+        <span class="delta"><b>39%</b> &middot; was 34%</span>
+        <p class="desc">Sessions with a usable recording that scored above the ABSLI grid threshold. The remaining 43 were mostly too short or empty to score, not poor sessions.</p>
+      </article>
+      <article class="metric">
+        <span class="lbl">Effectiveness score</span>
+        <span class="big">53.6<small> / 100</small></span>
+        <span class="delta"><b>+2.4</b> vs last block</span>
+        <p class="desc">Your signal health composite across the five ability dimensions below. Built from the reliable signal layer only, not from the flagged grid totals.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Dimensions</h2>
+      <p class="note">Signal health per ability, 0&ndash;100</p>
+    </div>
+    <div class="card pad">
+      <div class="dims">
+        <div class="dim">
+          <div class="nm">Delivery &amp; clarity<em>Pace, articulation, examples, instruction markers</em></div>
+          <div class="track"><i style="width:71.4%;background:var(--strong)"></i></div>
+          <div class="sc">71.4</div>
+        </div>
+        <div class="dim">
+          <div class="nm">Energy &amp; empathy<em>Vocal energy, tone consistency, reinforcement</em></div>
+          <div class="track"><i style="width:67.9%;background:var(--strong)"></i></div>
+          <div class="sc">67.9</div>
+        </div>
+        <div class="dim">
+          <div class="nm">Structure &amp; closure<em>Punctuality, agenda velocity, recap, close quality</em></div>
+          <div class="track"><i style="width:62.5%;background:var(--ok)"></i></div>
+          <div class="sc">62.5</div>
+        </div>
+        <div class="dim">
+          <div class="nm">Engagement &amp; interaction<em>Talk-time, open questions, wait time, spread</em></div>
+          <div class="track"><i style="width:54.2%;background:var(--watch)"></i></div>
+          <div class="sc">54.2</div>
+        </div>
+        <div class="dim">
+          <div class="nm">Coaching &amp; feedback<em>Coaching vs telling, corrective feedback, debrief</em></div>
+          <div class="track"><i style="width:28.6%;background:var(--weak)"></i></div>
+          <div class="sc">28.6</div>
+        </div>
+      </div>
+      <div class="axis"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Dimension read</h2>
+      <p class="note">What sits behind each score, and the one change that moves it</p>
+    </div>
+    <div class="reads">
+      <article class="read">
+        <div class="read-top"><h3>Coaching &amp; feedback</h3><span class="pill p-weak">28.6 &middot; Weak</span></div>
+        <dl>
+          <dt>What the sessions show</dt>
+          <dd>Corrective feedback appeared in none of the 28 scored sessions. Role-play debriefs ran short. Your feedback is warm and encouraging &mdash; "bahut badhiya", "perfect" &mdash; but it rarely names the behaviour to change.</dd>
+          <dt>Why it matters here</dt>
+          <dd>Advisors carry the pitch to a real customer the next morning. Anything you let pass in the room gets practised on the floor.</dd>
+        </dl>
+        <p class="do"><b>Try next session</b>Use three sentences after each role-play: what worked, what missed the ABSLI standard, and the exact line to say instead.</p>
+      </article>
+      <article class="read">
+        <div class="read-top"><h3>Engagement &amp; interaction</h3><span class="pill p-watch">54.2 &middot; Watch</span></div>
+        <dl>
+          <dt>What the sessions show</dt>
+          <dd>Talk-time sits at 45% &mdash; healthy &mdash; but average wait after a question is 0.0 seconds, so you answer your own questions. Open-ended ratio was rated Weak or Watch in 23% of sessions.</dd>
+          <dt>Why it matters here</dt>
+          <dd>You are already inviting participation. The pause is the missing half: without it the invitation never gets taken up.</dd>
+        </dl>
+        <p class="do"><b>Try next session</b>Ask, then count to five in your head before saying anything. Name one trainee if the room stays quiet.</p>
+      </article>
+      <article class="read">
+        <div class="read-top"><h3>Structure &amp; closure</h3><span class="pill p-ok">62.5 &middot; Ok</span></div>
+        <dl>
+          <dt>What the sessions show</dt>
+          <dd>Starts are punctual and agenda velocity is on pace. Endings are where it drops &mdash; 41% of sessions closed without a recap, and close quality was rated Weak in 11 of 28.</dd>
+          <dt>Why it matters here</dt>
+          <dd>Adults retain what they restate. A two-minute recall beats a ten-minute summary.</dd>
+        </dl>
+        <p class="do"><b>Try next session</b>Reserve the last three minutes. Ask the batch to state the three key learnings back to you, then close.</p>
+      </article>
+      <article class="read">
+        <div class="read-top"><h3>Delivery &amp; clarity</h3><span class="pill p-strong">71.4 &middot; Strong</span></div>
+        <dl>
+          <dt>What the sessions show</dt>
+          <dd>Filler rate 0.66%, dead air 0.09s, and examples land well &mdash; the terminal-illness rider and commission-structure explanations were both flagged as clear. Hinglish mix at 64% suits the batch.</dd>
+          <dt>Why it matters here</dt>
+          <dd>This is your base. It makes the harder habits above easier to add, because trainees already follow you.</dd>
+        </dl>
+        <p class="do"><b>Keep doing</b>The "jab bhi slide aayega, I will explain" signposting. It sets expectations before complex product detail.</p>
+      </article>
+      <article class="read">
+        <div class="read-top"><h3>Energy &amp; empathy</h3><span class="pill p-strong">67.9 &middot; Strong</span></div>
+        <dl>
+          <dt>What the sessions show</dt>
+          <dd>Vocal energy holds through the session with no second-half fatigue pattern. Empathy language was rated Watch once &mdash; corrective moments can read as brisk.</dd>
+          <dt>Why it matters here</dt>
+          <dd>Psychological safety is what lets a nervous advisor try the pitch badly the first time, in the room rather than on a call.</dd>
+        </dl>
+        <p class="do"><b>Try next session</b>Acknowledge the attempt before you sharpen it: "good attempt, now make the benefit line stronger."</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Persona overview</h2>
+      <p class="note">Cumulative across your latest completed 10-session block &middot; block_3</p>
+    </div>
+    <div class="persona">
+      <article class="pcard">
+        <div class="tagrow">
+          <span class="pill p-acc">Primary persona</span>
+          <span class="pill p-mute">SLM + rules</span>
+          <span class="pill p-mute">10 valid sessions</span>
+        </div>
+        <h3>The Hitter-and-Runner</h3>
+        <p class="pdesc">Starts role-plays but skips or rushes the debrief and the feedback that follows. The practice happens; the processing doesn't.</p>
+        <div class="conf">
+          <span class="eyebrow">Confidence</span>
+          <div class="track"><i style="width:44%;background:var(--accent)"></i></div>
+          <span class="num">0.44</span>
+        </div>
+        <ul class="quotes">
+          <li><span>Transcript evidence &middot; 0:21:47</span>&ldquo;Haan theek hai, nice. Chalo next scenario.&rdquo;</li>
+          <li><span>Transcript evidence &middot; 0:28:03</span>&ldquo;Good, good. Time kam hai, agle topic pe aate hain.&rdquo;</li>
+          <li><span>Rule evidence</span>Role-Play Debrief Duration: Weak &middot; Feedback Quality After Role-Play: Watch &middot; Corrective Feedback Instances: Weak</li>
+        </ul>
+      </article>
+      <div class="pside">
+        <div class="mini">
+          <div class="tagrow" style="margin-bottom:6px"><span class="pill p-mute">Secondary &middot; 0.29</span></div>
+          <h4>The People Pleaser</h4>
+          <p>Warm and supportive, but avoids clear corrective feedback. Shows up as praise without a named behaviour to change.</p>
+        </div>
+        <div class="mini">
+          <h4>If this goes unaddressed</h4>
+          <p>Skill mistakes get reinforced in the room, trainees repeat them on the floor, and the coaching moment is spent without being used.</p>
+        </div>
+        <div class="mini">
+          <h4>Prescribed coaching action</h4>
+          <p>Enforce a minimum debrief time, train on the SBI feedback structure, and have Feedback Quality scored on every session for the next block.</p>
+        </div>
+        <div class="mini">
+          <h4>Other personas scored</h4>
+          <ul class="pscale">
+            <li><span>The People Pleaser</span><div class="track"><i style="width:29%;background:var(--watch)"></i></div><span class="num">0.29</span></li>
+            <li><span>The Rusher</span><div class="track"><i style="width:21%;background:var(--line-2)"></i></div><span class="num">0.21</span></li>
+            <li><span>The One-Man Show</span><div class="track"><i style="width:14%;background:var(--line-2)"></i></div><span class="num">0.14</span></li>
+            <li><span>The Quiz Machine</span><div class="track"><i style="width:12%;background:var(--line-2)"></i></div><span class="num">0.12</span></li>
+            <li><span>The Reader</span><div class="track"><i style="width:7%;background:var(--line-2)"></i></div><span class="num">0.07</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ 2. SESSION LIBRARY ============ -->
+<div id="panel-sessions" role="tabpanel" aria-labelledby="tab-sessions" hidden>
+  <div class="privacy">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.6"/></svg>
+    <p>Your own recordings, newest first. Transcripts stay collapsed until you open them &mdash; nothing here is shared with your manager.</p>
+  </div>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Session library</h2>
+      <p class="note" id="sessCount">Showing 7 of 71 recorded sessions</p>
+    </div>
+    <div class="sess-tools">
+      <input class="field" id="sessSearch" type="search" placeholder="Search topic, batch or session ID" style="min-width:230px;flex:1;max-width:340px">
+      <button class="chip" type="button" data-sfilter="all" aria-pressed="true">All</button>
+      <button class="chip" type="button" data-sfilter="scored" aria-pressed="false">Scored</button>
+      <button class="chip" type="button" data-sfilter="attention" aria-pressed="false">Needs attention</button>
+      <button class="chip" type="button" data-sfilter="unscorable" aria-pressed="false">Not scorable</button>
+    </div>
+    <div id="sessList"></div>
+  </section>
+</div>
+
+<!-- ============ 3. HABITS & PROGRESS ============ -->
+<div id="panel-habits" role="tabpanel" aria-labelledby="tab-habits" hidden>
+  <div class="privacy">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7.5 15.5l3.5-4 3 2.5 4.5-6"/></svg>
+    <p>Gaps are counted as a share of your scored sessions, so a quiet cycle doesn't flatter the numbers. A signal needs three or more sessions before it is called a habit.</p>
+  </div>
+
+  <section class="block">
+    <div class="block-head"><h2>Gaps by signal area</h2><p class="note">Share of 28 scored sessions rated Watch, Weak or Critical</p></div>
+    <div class="two">
+      <div class="card pad">
+        <div class="gap-row"><div class="nm">Coaching &amp; feedback<em>4 signals &middot; debrief, corrective feedback, coaching ratio</em></div><div class="track"><i style="width:71%;background:var(--critical)"></i></div><div class="pc">71%</div></div>
+        <div class="gap-row"><div class="nm">Role-play &amp; practice<em>3 signals &middot; initiation, modelling, debrief duration</em></div><div class="track"><i style="width:62%;background:var(--weak)"></i></div><div class="pc">62%</div></div>
+        <div class="gap-row"><div class="nm">Session structure &amp; clarity<em>5 signals &middot; recap, close quality, dwell time</em></div><div class="track"><i style="width:48%;background:var(--weak)"></i></div><div class="pc">48%</div></div>
+        <div class="gap-row"><div class="nm">Talk dynamics &amp; engagement<em>8 signals &middot; wait time, open questions, spread</em></div><div class="track"><i style="width:35%;background:var(--watch)"></i></div><div class="pc">35%</div></div>
+        <div class="gap-row"><div class="nm">Learning outcomes<em>4 signals &middot; trainee questions, class energy</em></div><div class="track"><i style="width:27%;background:var(--watch)"></i></div><div class="pc">27%</div></div>
+        <div class="gap-row"><div class="nm">Emotional intelligence<em>4 signals &middot; vocal energy, tone, empathy, fatigue</em></div><div class="track"><i style="width:21%;background:var(--ok)"></i></div><div class="pc">21%</div></div>
+        <div class="gap-row"><div class="nm">Language &amp; content quality<em>5 signals &middot; clarity index, examples, hedging</em></div><div class="track"><i style="width:18%;background:var(--ok)"></i></div><div class="pc">18%</div></div>
+        <div class="gap-row"><div class="nm">Speech delivery<em>5 signals &middot; WPM, fillers, articulation, pace</em></div><div class="track"><i style="width:11%;background:var(--strong)"></i></div><div class="pc">11%</div></div>
+      </div>
+      <div class="card pad">
+        <h3 style="font-size:14px;margin-bottom:3px">Effectiveness distribution</h3>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:6px">Your 28 scored sessions by ABSLI grid score. Axis max 10 sessions.</p>
+        <div class="hist" role="img" aria-label="Distribution of 28 scored sessions: 3 sessions scored 0 to 20, 6 scored 20 to 30, 9 scored 30 to 40, 6 scored 40 to 50, 3 scored 50 to 65, and 1 scored 65 or above.">
+          <div class="hbar"><span class="cn">3</span><i style="height:30%"></i></div>
+          <div class="hbar"><span class="cn">6</span><i style="height:60%"></i></div>
+          <div class="hbar me"><span class="cn">9</span><i style="height:90%"></i></div>
+          <div class="hbar"><span class="cn">6</span><i style="height:60%"></i></div>
+          <div class="hbar"><span class="cn">3</span><i style="height:30%"></i></div>
+          <div class="hbar"><span class="cn">1</span><i style="height:10%"></i></div>
+        </div>
+        <div class="hlab"><span>0&ndash;20</span><span>20&ndash;30</span><span>30&ndash;40</span><span>40&ndash;50</span><span>50&ndash;65</span><span>65+</span></div>
+        <p class="hnote">Your average is <strong class="num">35.9</strong>, inside the highlighted band. Pulling the two lowest bands up is mostly a recording-length problem; pushing past 50 is a coaching-and-closing problem.</p>
+        <div class="dims" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+          <div class="dim" style="padding:9px 0"><div class="nm">Signal consistency across sessions</div><div class="track"><i style="width:61%;background:var(--ok)"></i></div><div class="sc">61.0</div></div>
+          <div class="dim" style="padding:9px 0"><div class="nm">Improvement velocity vs last block</div><div class="track"><i style="width:44%;background:var(--watch)"></i></div><div class="sc">+2.4</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Signal details</h2>
+      <p class="note" id="sigCount">30 signals &middot; tap any row for the nudge</p>
+    </div>
+    <div class="sig-tools">
+      <button class="chip" type="button" data-sigf="all" aria-pressed="true">All signals</button>
+      <button class="chip" type="button" data-sigf="Weak" aria-pressed="false">Needs work</button>
+      <button class="chip" type="button" data-sigf="Watch" aria-pressed="false">Watch</button>
+      <button class="chip" type="button" data-sigf="Ok" aria-pressed="false">Ok</button>
+      <button class="chip" type="button" data-sigf="Strong" aria-pressed="false">Strong</button>
+    </div>
+    <div class="card" id="sigList"></div>
+  </section>
+</div>
+
+<!-- ============ 4. DEVICE DETAILS ============ -->
+<div id="panel-device" role="tabpanel" aria-labelledby="tab-device" hidden>
+  <div class="privacy">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 5.6h2"/></svg>
+    <p>Demo values for the prototype. Your Sherpa Core records only while a session is running, and the recording stays paired to this device number.</p>
+  </div>
+
+  <section class="block">
+    <div class="block-head"><h2>Device details</h2><p class="note">Sherpa Core &middot; assigned asset</p></div>
+    <div class="dev">
+      <div class="card">
+        <div class="devhead">
+          <div class="devglyph">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="8" y="3" width="8" height="13" rx="4"/><path d="M12 16v4"/><path d="M9 21h6"/><path d="M5.5 9.5a6.5 6.5 0 0 0 13 0" stroke-dasharray="2 2"/></svg>
+          </div>
+          <div style="min-width:0">
+            <h3>Sherpa Core &mdash; lanyard mic</h3>
+            <p class="sub">SHC-2 &middot; paired &middot; recording enabled</p>
+          </div>
+          <span class="pill p-strong" style="margin-left:auto">Active</span>
+        </div>
+        <dl class="spec">
+          <div><dt>Device number</dt><dd>SHC-ABSLI-0417</dd></div>
+          <div><dt>Registration number</dt><dd>REG/ABSLI/LND/2026/0417</dd></div>
+          <div><dt>Serial number</dt><dd>SC2-7F39-4K12-8820</dd></div>
+          <div><dt>Model</dt><dd class="txt">Sherpa Core v2 (lanyard)</dd></div>
+          <div><dt>Firmware</dt><dd>2.4.1 &middot; current</dd></div>
+          <div><dt>App version</dt><dd>Sherpa 3.8.2 (412)</dd></div>
+          <div><dt>Assigned to</dt><dd class="txt">Yayati Deshmukh &middot; user1.absli</dd></div>
+          <div><dt>Asset owner</dt><dd class="txt">ABSLI L&amp;D &mdash; West</dd></div>
+          <div><dt>Registered on</dt><dd>14 Apr 2026</dd></div>
+          <div><dt>Warranty until</dt><dd>13 Apr 2028</dd></div>
+          <div><dt>Paired phone</dt><dd class="txt">Samsung Galaxy M34 &middot; Android 14</dd></div>
+          <div><dt>Connectivity</dt><dd class="txt">BLE 5.2 &middot; Wi-Fi sync</dd></div>
+        </dl>
+        <div class="spec" style="border-top:1px solid var(--line)">
+          <div><dt>Battery</dt><dd><span class="bat"><span class="shell"><span class="fill" style="width:78%"></span></span> 78% &middot; ~9h</span></dd></div>
+          <div><dt>On-device storage</dt><dd>3.1 GB free of 16 GB</dd></div>
+          <div><dt>Mic health</dt><dd class="txt">Good &middot; last self-test 27 Oct</dd></div>
+          <div><dt>Last synced</dt><dd>28 Oct 2026, 09:12 IST</dd></div>
+          <div><dt>Pending uploads</dt><dd>0 sessions</dd></div>
+          <div><dt>Recording permission</dt><dd class="txt">Mic &amp; notifications granted</dd></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+        <div class="card">
+          <div style="padding:15px 16px;border-bottom:1px solid var(--line)">
+            <h3 style="font-size:14px">Device number</h3>
+            <p style="font-size:12.5px;color:var(--muted);margin-top:3px;margin-bottom:10px">Quote this when you raise a recording issue.</p>
+            <div class="copyline"><span id="devNum">SHC-ABSLI-0417</span><button class="copybtn" type="button" data-copy="SHC-ABSLI-0417">Copy</button></div>
+          </div>
+          <div style="padding:15px 16px">
+            <h3 style="font-size:14px;margin-bottom:9px">Registration</h3>
+            <div class="copyline"><span>REG/ABSLI/LND/2026/0417</span><button class="copybtn" type="button" data-copy="REG/ABSLI/LND/2026/0417">Copy</button></div>
+            <div class="contactbox" style="margin-top:12px">
+              <button class="btn" type="button" data-goto="help">Report a device issue</button>
+              <button class="btn" type="button" id="syncBtn">Sync now</button>
+            </div>
+            <p id="syncMsg" style="font-size:12px;color:var(--accent-ink);margin-top:9px" hidden>Sync requested &mdash; 0 sessions pending, nothing to upload.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--line)"><h3 style="font-size:14px">Recent device log</h3></div>
+          <ul class="log">
+            <li><span class="ts">28 Oct 09:12</span><span class="ev2">Synced 2 sessions &middot; 41 min</span><span class="pill p-strong">Ok</span></li>
+            <li><span class="ts">27 Oct 18:40</span><span class="ev2">Mic self-test passed</span><span class="pill p-strong">Ok</span></li>
+            <li><span class="ts">27 Oct 14:02</span><span class="ev2">Recording stopped &mdash; incoming call</span><span class="pill p-watch">Interrupted</span></li>
+            <li><span class="ts">26 Oct 11:25</span><span class="ev2">Firmware 2.4.1 installed</span><span class="pill p-mute">Update</span></li>
+            <li><span class="ts">24 Oct 10:08</span><span class="ev2">Charged to 100%</span><span class="pill p-mute">Power</span></li>
+            <li><span class="ts">22 Oct 12:21</span><span class="ev2">Session saved without score &mdash; 38s clip</span><span class="pill p-weak">Too short</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ 5. HELP & SUPPORT ============ -->
+<div id="panel-help" role="tabpanel" aria-labelledby="tab-help" hidden>
+  <section class="block">
+    <div class="block-head">
+      <h2>How can we help?</h2>
+      <p class="note">Last session &middot; 28 Oct 2026, 11:05 AM</p>
+    </div>
+    <div class="help-grid">
+      <button class="hact" type="button" data-help="problem">
+        <strong>Report a problem</strong>
+        <span>Calls, recording, scores, login</span>
+      </button>
+      <button class="hact" type="button" data-help="feedback">
+        <strong>Share feedback</strong>
+        <span>Tell us what to improve</span>
+      </button>
+      <button class="hact" type="button" data-help="contact">
+        <strong>Call or WhatsApp</strong>
+        <span>Sherpa support, 9am&ndash;7pm IST</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- quick fixes -->
+  <section class="block" id="helpQuick">
+    <div class="block-head"><h2>Quick fixes</h2><p class="note">Most reported issues this month</p></div>
+    <div class="card">
+      <details class="qf">
+        <summary>A call or another app interrupted my session<span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg></span></summary>
+        <div class="qf-body">
+          <p>Sherpa pauses rather than stops. The clip resumes on the same session once the call ends.</p>
+          <ol>
+            <li>Reopen Sherpa and check the session banner says <em>Resumed</em>.</li>
+            <li>If it says <em>Ended early</em>, the two parts upload as separate clips &mdash; report the session and support will merge them.</li>
+            <li>Turn on Do Not Disturb before a session to avoid it.</li>
+          </ol>
+        </div>
+      </details>
+      <details class="qf">
+        <summary>Recording stopped midway<span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg></span></summary>
+        <div class="qf-body">
+          <p>Usually battery optimisation closing the app in the background, or the Core dropping its Bluetooth pairing.</p>
+          <ol>
+            <li>Check the Core is above 15% battery &mdash; see Device details.</li>
+            <li>Exclude Sherpa from battery optimisation in your phone settings.</li>
+            <li>Re-pair the Core if the device log shows a dropped connection.</li>
+          </ol>
+        </div>
+      </details>
+      <details class="qf">
+        <summary>Session finished but the score is missing<span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg></span></summary>
+        <div class="qf-body">
+          <p>Scoring needs a stored transcript. Clips under about two minutes, or with no clear speech, return no score &mdash; they show as <em>Not scorable</em> in your library rather than as a low score.</p>
+          <ol>
+            <li>Check the clip length in Session library.</li>
+            <li>If the session was full length and still unscored, report it and it will be re-run.</li>
+          </ol>
+        </div>
+      </details>
+      <details class="qf">
+        <summary>Mic or notification permission issue<span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg></span></summary>
+        <div class="qf-body">
+          <p>Sherpa needs the microphone to record and notifications to tell you when a score is ready.</p>
+          <ol>
+            <li>Open your phone settings, then Sherpa, then Permissions.</li>
+            <li>Allow Microphone and Notifications.</li>
+            <li>Reopen Sherpa &mdash; Device details should show both as granted.</li>
+          </ol>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- report a problem -->
+  <section class="block" id="helpProblem" hidden>
+    <div class="block-head"><h2>Report a problem</h2><p class="note">Goes to Sherpa support, not to your manager</p></div>
+    <div class="card pad">
+      <form class="sup" id="formProblem" novalidate>
+        <fieldset>
+          <legend>What went wrong?</legend>
+          <div class="chipset" data-single="problemType">
+            <button class="chip" type="button" aria-pressed="true">Call interrupted</button>
+            <button class="chip" type="button" aria-pressed="false">Recording stopped</button>
+            <button class="chip" type="button" aria-pressed="false">Session not saved</button>
+            <button class="chip" type="button" aria-pressed="false">Score looks wrong</button>
+            <button class="chip" type="button" aria-pressed="false">Login or access</button>
+            <button class="chip" type="button" aria-pressed="false">Something else</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Which session?</legend>
+          <label for="probSession" class="eyebrow" style="display:none">Session</label>
+          <select class="field" id="probSession" style="min-width:min(100%,340px)">
+            <option>28 Oct 2026 &middot; 11:05 AM &middot; score 41 &middot; Super Term Plan riders</option>
+            <option>27 Oct 2026 &middot; 14:02 PM &middot; not scorable &middot; GAP annuity revision</option>
+            <option>22 Oct 2026 &middot; 12:21 PM &middot; score 13 &middot; Objection handling drill</option>
+            <option>20 Oct 2026 &middot; 10:30 AM &middot; score 48 &middot; Commission structure</option>
+          </select>
+        </fieldset>
+        <fieldset>
+          <legend>Tell us more (optional)</legend>
+          <textarea class="field" id="probNotes" placeholder="What happened and when? A line is enough."></textarea>
+          <div class="contactbox" style="margin-top:9px">
+            <button class="btn" type="button">Attach voice note</button>
+            <button class="btn" type="button">Attach screenshot</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Sent automatically, so you don't have to type it</legend>
+          <div class="auto">
+            <span class="pill p-mute">Device &amp; OS &middot; Galaxy M34, Android 14</span>
+            <span class="pill p-mute">App version &middot; 3.8.2 (412)</span>
+            <span class="pill p-mute">Network &middot; Wi-Fi</span>
+            <span class="pill p-mute">Session ID &middot; 7d3c3445</span>
+            <span class="pill p-mute">Device number &middot; SHC-ABSLI-0417</span>
+            <span class="pill p-mute">Time of issue &middot; 28 Oct, 11:41 IST</span>
+          </div>
+        </fieldset>
+        <div class="contactbox">
+          <button class="btn btn-pri" type="submit">Send to support</button>
+          <button class="btn" type="button" data-help="quick">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- share feedback -->
+  <section class="block" id="helpFeedback" hidden>
+    <div class="block-head"><h2>Share feedback</h2><p class="note">Shapes what gets built next</p></div>
+    <div class="card pad">
+      <form class="sup" id="formFeedback" novalidate>
+        <fieldset>
+          <legend>How is Sherpa working for you?</legend>
+          <div class="chipset" data-single="mood">
+            <button class="chip" type="button" aria-pressed="false">Working well</button>
+            <button class="chip" type="button" aria-pressed="true">Good, but room to improve</button>
+            <button class="chip" type="button" aria-pressed="false">Not working for me</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>What is it about?</legend>
+          <div class="chipset" data-single="topic">
+            <button class="chip" type="button" aria-pressed="false">Live Assist</button>
+            <button class="chip" type="button" aria-pressed="true">Scores and insights</button>
+            <button class="chip" type="button" aria-pressed="false">Coaching tips</button>
+            <button class="chip" type="button" aria-pressed="false">App speed</button>
+            <button class="chip" type="button" aria-pressed="false">Something else</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>What would make it better? (optional)</legend>
+          <textarea class="field" id="fbNotes" placeholder="Tell us what worked, what didn't, or what you wish Sherpa did."></textarea>
+        </fieldset>
+        <label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--ink-2)">
+          <input type="checkbox" id="fbContact" checked style="margin-top:3px">
+          <span>Okay for the team to contact me about this</span>
+        </label>
+        <div class="contactbox">
+          <button class="btn btn-pri" type="submit">Send feedback</button>
+          <button class="btn" type="button" data-help="quick">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- contact -->
+  <section class="block" id="helpContact" hidden>
+    <div class="block-head"><h2>Call or WhatsApp</h2><p class="note">Sherpa support &middot; Mon&ndash;Sat, 9am&ndash;7pm IST</p></div>
+    <div class="card pad">
+      <div class="two">
+        <div>
+          <p class="eyebrow" style="margin-bottom:7px">Support helpline</p>
+          <div class="copyline"><span>+91 80 4718 2290</span><button class="copybtn" type="button" data-copy="+918047182290">Copy</button></div>
+          <p class="eyebrow" style="margin:14px 0 7px">WhatsApp</p>
+          <div class="copyline"><span>+91 98450 11229</span><button class="copybtn" type="button" data-copy="+919845011229">Copy</button></div>
+          <p class="eyebrow" style="margin:14px 0 7px">Email</p>
+          <div class="copyline"><span>sherpa.support@darwix.ai</span><button class="copybtn" type="button" data-copy="sherpa.support@darwix.ai">Copy</button></div>
+        </div>
+        <div>
+          <p style="font-size:13px;color:var(--ink-2)">Have your device number ready &mdash; it is <strong class="num">SHC-ABSLI-0417</strong>. For anything about a specific session, raising it through <em>Report a problem</em> is faster, because the session ID, device and network details are attached for you.</p>
+          <p style="font-size:13px;color:var(--ink-2);margin-top:11px">For course content, batch allocation or your evaluation grid, contact your reporting manager Shalini Mehra rather than Sherpa support.</p>
+          <div class="contactbox" style="margin-top:14px"><button class="btn" type="button" data-help="problem">Report a problem instead</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- sent confirmation -->
+  <section class="block" id="helpSent" hidden>
+    <div class="card sent">
+      <div class="tick"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h3 id="sentTitle">Request sent</h3>
+      <p id="sentBody">Thanks, we've got it. We'll update you here and in your notifications.</p>
+      <p class="num" style="font-size:12.5px;color:var(--muted);margin-top:10px" id="sentRef">Reference #SH-1043 &middot; received just now</p>
+      <ol class="steps">
+        <li class="done"><span class="dot"></span><span><span class="st">Received</span><span class="sd">#SH-1043 &middot; just now</span></span></li>
+        <li class="now"><span class="dot"></span><span><span class="st">In review</span><span class="sd">A support engineer picks it up</span></span></li>
+        <li><span class="dot"></span><span><span class="st">Answer or fix sent</span><span class="sd">You'll get a notification</span></span></li>
+      </ol>
+      <div class="contactbox" style="justify-content:center;margin-top:20px">
+        <button class="btn" type="button" data-help="quick">View my requests</button>
+        <button class="btn" type="button" data-goto="self-check">Back to self-check</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head"><h2>My requests</h2><p class="note">Raised from this device</p></div>
+    <div class="card" id="reqList">
+      <div class="req"><div><div class="t">Recording stopped midway</div><div class="m">#SH-1042 &middot; 22 Oct &middot; device SHC-ABSLI-0417</div></div><span class="pill p-watch">In review</span></div>
+      <div class="req"><div><div class="t">Score looks wrong</div><div class="m">#SH-1017 &middot; 14 Oct &middot; session 59e8af25</div></div><span class="pill p-strong">Resolved</span></div>
+    </div>
+  </section>
+</div>
+
+  <p class="foot">Sherpa Trainer Self-Check &mdash; prototype with demonstration data. Metrics follow the ABSLI 100-point evaluation grid and the 48-signal trainer set; personas follow the cumulative 10-session mapping logic. Nothing on this page is a live record.</p>
+</main>
+
+<script>
+(function(){
+"use strict";
+var SIGNALS = [
+ {
+  "cat": "Session Opening",
+  "sub": "Trainer Readiness & Punctuality",
+  "desc": "Trainer joins on time with materials ready introduces the session agenda clearly and sets a positive tone from the first minute",
+  "score": 3.0,
+  "pitch": "Start strong: welcome the batch, confirm materials are ready, and set the exact ABSLI skill to be practised today."
+ },
+ {
+  "cat": "Session Opening",
+  "sub": "Learner Welcome & Icebreaker",
+  "desc": "Trainer welcomes participants by name or batch runs a brief icebreaker or energy check and establishes psychological safety",
+  "score": 2.0,
+  "pitch": "Run a quick energy check: ask each trainee to share one real customer hesitation they have heard or expect to face."
+ },
+ {
+  "cat": "Session Opening",
+  "sub": "Objective Setting & Expectation Alignment",
+  "desc": "Trainer articulates clear learning objectives links them to real world application and checks prior knowledge or experience level",
+  "score": 2.0,
+  "pitch": "Link the objective to floor performance: by the end, each trainee should be able to explain the plan, handle one objection, and close with a next step."
+ },
+ {
+  "cat": "Delivery & Communication Skills",
+  "sub": "Speaking Rate & Pace",
+  "desc": "Speaking rate WPM pace consistency and sentence completion Flag too fast slow or high variance",
+  "score": 4.0,
+  "pitch": "Slow down and chunk the explanation: explain one concept, pause, check understanding, then move to the next example."
+ },
+ {
+  "cat": "Delivery & Communication Skills",
+  "sub": "Filler Words & Articulation",
+  "desc": "Frequency of fillers um uh and articulation clarity score",
+  "score": 3.0,
+  "pitch": "Reduce filler words now: take a short pause before explaining the benefit so the trainee hears a confident, clean pitch."
+ },
+ {
+  "cat": "Delivery & Communication Skills",
+  "sub": "Language Clarity & Examples",
+  "desc": "Instruction clarity example analogy usage hedging & positive reinforcement",
+  "score": 4.0,
+  "pitch": "Use a simple ABSLI example: convert the product point into a real advisor-customer situation trainees can repeat."
+ },
+ {
+  "cat": "Delivery & Communication Skills",
+  "sub": "Negative Language Avoidance",
+  "desc": "Avoidance of discouraging or dismissive language",
+  "score": 4.0,
+  "pitch": "Reframe corrective feedback positively: say 'try this stronger version' instead of calling the response wrong."
+ },
+ {
+  "cat": "Engagement & Interaction",
+  "sub": "Talk Time Ratio & Questions",
+  "desc": "Trainer vs trainee talk time question frequency & open ended ratio",
+  "score": 4.0,
+  "pitch": "Bring trainees into the conversation: ask an open question and make at least two participants answer before continuing."
+ },
+ {
+  "cat": "Engagement & Interaction",
+  "sub": "Wait Time & Response Rate",
+  "desc": "Wait time after questions and trainee response rate",
+  "score": 4.0,
+  "pitch": "Hold the pause after your question: give trainees a few seconds to think before you answer it yourself."
+ },
+ {
+  "cat": "Engagement & Interaction",
+  "sub": "Interruption & Silence Management",
+  "desc": "Mutual interruption rate and dead air duration",
+  "score": 3.0,
+  "pitch": "Acknowledge the trainee, park side conversations, and redirect the room back to the role-play objective."
+ },
+ {
+  "cat": "Session Structure & Management",
+  "sub": "Punctuality & Agenda Velocity",
+  "desc": "Session start punctuality and agenda coverage velocity",
+  "score": 4.0,
+  "pitch": "Move the session forward: call out the agenda checkpoint and either close, park, or fast-track the current topic."
+ },
+ {
+  "cat": "Session Structure & Management",
+  "sub": "Recap Dwell Time & Close",
+  "desc": "Recap frequency topic dwell time and session close quality",
+  "score": 5.0,
+  "pitch": "Pause for a micro-recap: ask trainees to repeat the key ABSLI pitch line and the customer objection response."
+ },
+ {
+  "cat": "Coaching & Feedback",
+  "sub": "Coaching vs Telling Ratio",
+  "desc": "Ratio of coaching guiding vs directive language",
+  "score": 4.0,
+  "pitch": "Shift from telling to coaching: ask 'what would you say next?' and guide the trainee to improve the answer."
+ },
+ {
+  "cat": "Coaching & Feedback",
+  "sub": "Feedback Quality & Corrective Instances",
+  "desc": "Structured feedback after role play and corrective feedback quality",
+  "score": 4.0,
+  "pitch": "Give feedback in behaviour format: what worked, what missed the ABSLI standard, and the exact line to try next."
+ },
+ {
+  "cat": "Coaching & Feedback",
+  "sub": "Empathy Score",
+  "desc": "Empathy language and emotional attunement",
+  "score": 3.0,
+  "pitch": "Show empathy while correcting: acknowledge effort first, then sharpen the phrase without lowering trainee confidence."
+ },
+ {
+  "cat": "Emotional Intelligence & Energy",
+  "sub": "Vocal Energy & Tone Consistency",
+  "desc": "Trainer vocal energy enthusiasm and tone consistency",
+  "score": 5.0,
+  "pitch": "Raise vocal energy before the next activity: use a stronger tone and signal that this is the most important practice round."
+ },
+ {
+  "cat": "Emotional Intelligence & Energy",
+  "sub": "Empathy & Fatigue Indicators",
+  "desc": "Empathy phrases and signs of trainer fatigue",
+  "score": 4.0,
+  "pitch": "Reset the room if energy drops: appreciate participation, stretch the moment, and restart with a focused role-play."
+ },
+ {
+  "cat": "Adaptability & Learner Engagement",
+  "sub": "Pace Adjustment & Clarification",
+  "desc": "Pace adjustments clarification triggers and repeat explanation rate",
+  "score": 5.0,
+  "pitch": "Slow down and clarify: repeat the concept using a simpler customer scenario before moving ahead."
+ },
+ {
+  "cat": "Adaptability & Learner Engagement",
+  "sub": "Role Play Initiation & Modelling",
+  "desc": "Role play initiation trainer modelling and debrief duration",
+  "score": 5.0,
+  "pitch": "Model first, then make trainees practise: demonstrate the ABSLI pitch line once and immediately assign two role-play pairs."
+ },
+ {
+  "cat": "Learning Outcomes & Class Dynamics",
+  "sub": "Trainee Question Rate & Energy",
+  "desc": "Trainee question rate class energy trajectory and crosstalk side conversations",
+  "score": 5.0,
+  "pitch": "Create more participation: invite questions on product explanation, objection handling, and closing before moving to the next topic."
+ },
+ {
+  "cat": "Learning Outcomes & Class Dynamics",
+  "sub": "Trainee Participation & Silence",
+  "desc": "Individual engagement spread and trainee silence when called upon",
+  "score": 4.0,
+  "pitch": "Draw in quieter trainees safely: ask a low-pressure question and let them answer using a prepared pitch line."
+ },
+ {
+  "cat": "Performance Analytics & Composites",
+  "sub": "Cross Session Consistency & Improvement",
+  "desc": "Signal consistency score and improvement velocity",
+  "score": 2.0,
+  "pitch": "Connect today’s observation to the previous session: highlight one improvement and one behaviour to keep practising."
+ },
+ {
+  "cat": "Performance Analytics & Composites",
+  "sub": "Batch Outcome Correlation",
+  "desc": "Correlation of signals with downstream KPIs AHT CSAT etc",
+  "score": 2.0,
+  "pitch": "Tie the signal to business impact: explain how this behaviour improves trainee readiness, compliance, and customer conversation quality."
+ },
+ {
+  "cat": "Performance Analytics & Composites",
+  "sub": "Delivery Effectiveness Score",
+  "desc": "Composite score for content delivery voice structure clarity",
+  "score": 3.0,
+  "pitch": "Strengthen delivery now: structure the explanation as context, benefit, example, and trainee practice."
+ },
+ {
+  "cat": "Performance Analytics & Composites",
+  "sub": "Trainer Engagement Index",
+  "desc": "Overall engagement composite across signals",
+  "score": 3.0,
+  "pitch": "Lift engagement with a quick activity: move from explanation to role-play, quiz, or peer feedback."
+ },
+ {
+  "cat": "Performance Analytics & Composites",
+  "sub": "Monologue Alert & Coachability",
+  "desc": "Monologue detection and coachability score",
+  "score": 2.0,
+  "pitch": "You are speaking too long: stop, ask a trainee to summarise, and convert the next point into practice."
+ },
+ {
+  "cat": "Session Closing",
+  "sub": "Recap & Key Takeaways",
+  "desc": "Trainer summarises the main topics covered reinforces key learning points and checks if objectives were met",
+  "score": 2.0,
+  "pitch": "Close with trainee recall: ask the batch to state the three key learnings and where they will use them on the floor."
+ },
+ {
+  "cat": "Session Closing",
+  "sub": "Action Plan & Application Commitment",
+  "desc": "Trainer asks each learner to commit to one specific on floor action from the session and notes it for follow up",
+  "score": 2.0,
+  "pitch": "Make the learning measurable: ask each trainee to commit to one ABSLI pitch line or objection response they will practise next."
+ },
+ {
+  "cat": "Session Closing",
+  "sub": "Feedback & Session Close",
+  "desc": "Trainer collects structured feedback verbal or written thanks participants and closes the session on a high energy motivating note",
+  "score": 3.0,
+  "pitch": "End with confidence: collect one feedback point, appreciate the batch, and leave them with a clear practice action."
+ }
+];
+
+var RATING = {5:"Strong",4:"Ok",3:"Watch",2:"Weak",1:"Critical"};
+var CLS = {Strong:"p-strong",Ok:"p-ok",Watch:"p-watch",Weak:"p-weak",Critical:"p-critical"};
+
+var SESSIONS = [
+ {id:"7d3c3445",date:"28 Oct 2026",time:"11:05 IST",topic:"Super Term Plan — riders and terminal illness benefit",batch:"Batch AG-114 · 18 advisors",dur:"52 min",score:41,talk:"46%",wpm:58,persona:"The Hitter-and-Runner",state:"scored",
+  transcript:[
+   {t:"00:30",s:"You",txt:"Jab bhi slide aayega, I will explain you ki special discount kya-kya hai. Note karte chalo."},
+   {t:"02:18",s:"You",txt:"In the next 55 minutes we'll cover the rider structure, then terminal illness, then we'll do two role-plays on objection handling."},
+   {t:"06:45",s:"You",txt:"So first thing terminal illness — on diagnosis of terminal illness the life assured is paid 50% of the sum assured."},
+   {t:"07:12",s:"Advisor (Ashish)",txt:"Sir, aur baaki 50%?"},
+   {t:"07:14",s:"You",txt:"Baaki 50% death benefit ke time pe. Yah inbuilt feature rahega super term plan mein, koi extra premium nahi."},
+   {t:"21:40",s:"You",txt:"Chalo Ashish, tum customer ban jao. Priya, tum advisor. Start karo."},
+   {t:"21:47",s:"You",txt:"Haan theek hai, nice. Chalo next scenario."},
+   {t:"23:26",s:"You",txt:"In case you have any questions please feel free to ask."},
+   {t:"28:03",s:"You",txt:"Good, good. Time kam hai, agle topic pe aate hain."}
+  ],
+  evidence:[
+   {t:"02:18",lab:"Agenda framed clearly",kind:"Positive",q:"In the next 55 minutes we'll cover…",why:"A strong opening sets retention anchors for the whole session."},
+   {t:"06:45",lab:"Clear explanation of terms",kind:"Positive",q:"On diagnosis of terminal illness the life assured is paid 50% of the sum assured.",why:"Effective clarification of a policy detail advisors are often asked about."},
+   {t:"21:47",lab:"Debrief skipped after role-play",kind:"Risk",q:"Haan theek hai, nice. Chalo next scenario.",why:"The round ran but nothing was named — what worked, what missed, or the line to try instead."},
+   {t:"28:03",lab:"Feedback closed with praise only",kind:"Risk",q:"Good, good. Time kam hai, agle topic pe aate hain.",why:"Praise without a behaviour attached does not change what the advisor says on a call."}
+  ]},
+ {id:"4b91ce08",date:"27 Oct 2026",time:"14:02 IST",topic:"GAP annuity rate revision — what changed",batch:"Batch AG-114 · 16 advisors",dur:"38 sec",score:null,talk:"—",wpm:0,persona:"—",state:"unscorable",
+  transcript:[{t:"00:04",s:"You",txt:"Hello, hello — awaaz aa rahi hai? Ek minute, call aa raha hai."}],
+  evidence:[{t:"00:38",lab:"Clip too short to score",kind:"Flag",q:"",why:"Recording ended 38 seconds in — an incoming call interrupted the session. Scoring needs a stored transcript, so this returned no score rather than a low one."}]},
+ {id:"c2a7f511",date:"24 Oct 2026",time:"10:15 IST",topic:"Objection handling — \"premium zyada hai\"",batch:"Batch AG-113 · 21 advisors",dur:"47 min",score:48,talk:"43%",wpm:54,persona:"The People Pleaser",state:"scored",
+  transcript:[
+   {t:"01:10",s:"You",txt:"Aaj hum sirf ek objection pe kaam karenge — premium zyada hai. Do role-play honge."},
+   {t:"04:22",s:"You",txt:"Feel, felt, found — pehle acknowledge karo, phir doosre customer ka example do, phir solution."},
+   {t:"12:05",s:"Advisor (Priya)",txt:"Sir, customer bolta hai ki LIC mein sasta mil raha hai, tab kya bolna hai?"},
+   {t:"12:08",s:"You",txt:"Achha question. Dekho, price compare nahi, benefit compare karao. Terminal illness rider inbuilt hai — wo compare karo."},
+   {t:"26:30",s:"You",txt:"Bahut badhiya Priya, perfect. Next."},
+   {t:"41:12",s:"You",txt:"Theek hai, time ho gaya. Kal milte hain."}
+  ],
+  evidence:[
+   {t:"12:08",lab:"Reframed the objection well",kind:"Positive",q:"Price compare nahi, benefit compare karao.",why:"Gives the advisor a usable line, not just a principle."},
+   {t:"26:30",lab:"Vague praise after role-play",kind:"Risk",q:"Bahut badhiya Priya, perfect. Next.",why:"Nothing corrective. Rated Weak on Corrective Feedback Instances."},
+   {t:"41:12",lab:"Session closed without recap",kind:"Risk",q:"Theek hai, time ho gaya. Kal milte hain.",why:"No takeaway consolidation or commitment setting — the last three minutes are the cheapest fix available."}
+  ]},
+ {id:"71aee4c9",date:"22 Oct 2026",time:"12:21 IST",topic:"Advisor career proposition and commission structure",batch:"Batch AG-113 · 21 advisors",dur:"31 min",score:13,talk:"100%",wpm:63,persona:"The One-Man Show",state:"attention",
+  transcript:[
+   {t:"00:32",s:"You",txt:"Giving a better quality of lifestyle for your family is also very important."},
+   {t:"00:45",s:"You",txt:"Agar yeh opportunity miss ho jayegi to wo kahin na kahin apne sapne pure nahin kar payegi."},
+   {t:"01:10",s:"You",txt:"Anyone from the audience, agar mujhe do-teen to bahut, matlab aap bata doge turant ki kaun hai."},
+   {t:"01:11",s:"You",txt:"Chalo main hi bata deta hoon."},
+   {t:"01:30",s:"You",txt:"Let's make this session interactive."},
+   {t:"28:20",s:"You",txt:"So, jo first year premium hoga, uspe commission milega."}
+  ],
+  evidence:[
+   {t:"01:30",lab:"Session made interactive — invitation given",kind:"Positive",q:"Let's make this session interactive.",why:"Encouraging participation fosters engagement and retention."},
+   {t:"01:11",lab:"Question self-answered in 1 second",kind:"Risk",q:"Chalo main hi bata deta hoon.",why:"Wait time after question rated Weak. The invitation was made and withdrawn before anyone could take it."},
+   {t:"28:20",lab:"Commission detail left unclear",kind:"Risk",q:"So, jo first year premium hoga.",why:"Advisors need the exact slab to repeat it. Sentence trailed off without the figure."},
+   {t:"00:45",lab:"Repetition reduced clarity",kind:"Risk",q:"working hours working hours choose the",why:"Repetitive phrasing may confuse participants and detracts from the delivery."}
+  ]},
+ {id:"9f44ab21",date:"20 Oct 2026",time:"09:40 IST",topic:"Need analysis — family protection conversation",batch:"Batch AG-112 · 14 advisors",dur:"44 min",score:52,talk:"41%",wpm:51,persona:"The Hitter-and-Runner",state:"scored",
+  transcript:[
+   {t:"00:50",s:"You",txt:"Pehle ek energy check — ek word mein batao aaj kaisa feel kar rahe ho."},
+   {t:"03:15",s:"You",txt:"Think of it as a doctor's consultation. Pehle diagnosis, phir prescription. Product baad mein aata hai."},
+   {t:"18:40",s:"You",txt:"Rohit, tum kya poochhoge sabse pehle customer se?"},
+   {t:"18:46",s:"Advisor (Rohit)",txt:"Sir, main poochhunga ki family mein kitne log dependent hain."},
+   {t:"18:52",s:"You",txt:"Bilkul sahi. Aur uske baad income replacement — kitne saal ka."},
+   {t:"38:10",s:"You",txt:"Last two minutes — teen cheezein jo aaj seekhi, koi batayega?"}
+  ],
+  evidence:[
+   {t:"03:15",lab:"Analogy used effectively",kind:"Positive",q:"Think of it as a doctor's consultation.",why:"Example and analogy usage rated Strong. Converts an abstract process into something repeatable."},
+   {t:"18:40",lab:"Named a trainee and waited",kind:"Positive",q:"Rohit, tum kya poochhoge sabse pehle customer se?",why:"Wait time rated Ok for the first time in this block. This is the behaviour to repeat."},
+   {t:"38:10",lab:"Recap attempted at close",kind:"Positive",q:"Teen cheezein jo aaj seekhi, koi batayega?",why:"Your highest grid score in the block. The recap is a large part of why."}
+  ]},
+ {id:"5d10bb73",date:"17 Oct 2026",time:"15:20 IST",topic:"Compliance language and mis-selling guardrails",batch:"Batch AG-112 · 14 advisors",dur:"29 min",score:27,talk:"71%",wpm:66,persona:"The Rusher",state:"attention",
+  transcript:[
+   {t:"01:02",s:"You",txt:"Yeh module mandatory hai, jaldi cover karna hai, to main fast chalunga."},
+   {t:"09:30",s:"You",txt:"Guaranteed word use nahi karna hai jahan guarantee nahi hai. I think… haan, aisa hi hai."},
+   {t:"17:45",s:"You",txt:"Questions? Nahi? Chalo aage."},
+   {t:"28:40",s:"You",txt:"Done, module complete. Attendance mark kar dena."}
+  ],
+  evidence:[
+   {t:"09:30",lab:"Hedging on a compliance point",kind:"Risk",q:"I think… haan, aisa hi hai.",why:"Hedging / Uncertainty Language rated Weak. On zero-tolerance content, advisors carry the uncertainty to the customer."},
+   {t:"17:45",lab:"Question window closed in 2 seconds",kind:"Risk",q:"Questions? Nahi? Chalo aage.",why:"Wait Time After Question rated Weak. Pace prioritised over comprehension on the highest-risk module."},
+   {t:"28:40",lab:"Abrupt close, no knowledge check",kind:"Risk",q:"Done, module complete.",why:"Compliance modules are exactly where a knowledge check is needed for the audit trail."}
+  ]},
+ {id:"e8c0d415",date:"14 Oct 2026",time:"11:00 IST",topic:"Product refresher — guaranteed annuity plan",batch:"Batch AG-111 · 19 advisors",dur:"41 min",score:36,talk:"58%",wpm:57,persona:"The People Pleaser",state:"scored",
+  transcript:[
+   {t:"00:45",s:"You",txt:"Ek baat note karo — we have revised the annuity rates in GAP. Take a note of this."},
+   {t:"04:00",s:"You",txt:"So this age group is very soon increasing towards the grey. India mein social security ka support kahin pe bhi nahi hai."},
+   {t:"15:22",s:"Advisor (Meena)",txt:"Sir, revised rate kahan se dekhein?"},
+   {t:"15:28",s:"You",txt:"Portal pe rate card updated hai, main link daal deta hoon group mein."},
+   {t:"33:50",s:"You",txt:"Achha laga aaj ka session. Sab badhiya kar rahe ho."}
+  ],
+  evidence:[
+   {t:"00:45",lab:"Call to action was clear",kind:"Positive",q:"Increase the annuity rates in GAP. Take a note of this.",why:"A direct instruction makes sure a rate change is not overlooked."},
+   {t:"04:00",lab:"Context given but not opened up",kind:"Risk",q:"India mein social security ka support kahin pe bhi nahi hai.",why:"A strong point delivered as a statement. Asking the batch would have made it theirs."},
+   {t:"33:50",lab:"Closed on praise, no action plan",kind:"Risk",q:"Sab badhiya kar rahe ho.",why:"Action Planning and Commitment Setting scored 0. No advisor left with a named thing to practise."}
+  ]}
+];
+
+function chev(){return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg>';}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+/* ---------- session library ---------- */
+var sessList = document.getElementById("sessList");
+var sessCount = document.getElementById("sessCount");
+var sFilter = "all", sQuery = "";
+
+function sessionHTML(s){
+  var scoreTxt = s.score === null ? "—" : s.score;
+  var warn = (s.score !== null && s.score < 30) ? " warn" : "";
+  var flag = s.state === "unscorable" ? '<span class="pill p-mute">Not scorable</span>'
+    : s.state === "attention" ? '<span class="pill p-weak">Needs attention</span>'
+    : '<span class="pill p-strong">Scored</span>';
+  var turns = s.transcript.map(function(t){
+    var isYou = t.s === "You";
+    return '<div class="turn'+(isYou?"":" trainee")+'"><span class="ts">'+t.t+'</span><div><span class="sp">'+esc(t.s)+'</span><p>'+esc(t.txt)+'</p></div></div>';
+  }).join("");
+  var evs = s.evidence.map(function(e){
+    var cls = e.kind === "Positive" ? "p-strong" : (e.kind === "Flag" ? "p-mute" : "p-weak");
+    return '<div class="ev-item"><div class="top"><span class="ts">'+e.t+'</span><span class="pill '+cls+'">'+e.kind+'</span></div>'
+      + '<div class="lb">'+esc(e.lab)+'</div>'
+      + (e.q ? '<q>'+esc(e.q)+'</q>' : '')
+      + '<p class="why">'+esc(e.why)+'</p></div>';
+  }).join("");
+  return '<article class="sess" data-state="'+s.state+'" data-hay="'+esc((s.topic+" "+s.batch+" "+s.id).toLowerCase())+'">'
+   + '<div class="sess-row">'
+   +   '<div class="sess-when"><div class="d">'+s.date+'</div><div class="t">'+s.time+'</div></div>'
+   +   '<div class="sess-what"><div class="tp">'+esc(s.topic)+'</div><div class="bt">'+esc(s.batch)+' · '+s.id+'</div></div>'
+   +   '<div class="cell"><span class="k">Length</span><span class="v">'+s.dur+'</span></div>'
+   +   '<div class="cell"><span class="k">Grid</span><span class="v'+warn+'">'+scoreTxt+'</span></div>'
+   +   '<div class="cell"><span class="k">Talk-time</span><span class="v">'+s.talk+'</span></div>'
+   +   '<div class="cell"><span class="k">WPM</span><span class="v">'+(s.wpm||"—")+'</span></div>'
+   +   '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+flag
+   +     '<button class="disc" type="button" aria-expanded="false">Transcript '+chev()+'</button></div>'
+   + '</div>'
+   + '<div class="sess-body" hidden><div class="sess-body-grid">'
+   +   '<div class="tx"><div class="tx-head"><h4>Transcript</h4><span class="pill p-mute">'+esc(s.persona)+'</span><span class="meta">'+s.transcript.length+' marked turns · Hinglish</span></div>'
+   +   '<div class="tx-scroll">'+turns+'</div></div>'
+   +   '<div class="ev"><p class="eyebrow">Evidence moments</p>'+evs+'</div>'
+   + '</div></div></article>';
+}
+
+function renderSessions(){
+  var shown = 0;
+  sessList.innerHTML = SESSIONS.map(sessionHTML).join("");
+  Array.prototype.forEach.call(sessList.querySelectorAll(".sess"), function(el){
+    var okF = sFilter === "all" || el.getAttribute("data-state") === sFilter;
+    var okQ = !sQuery || el.getAttribute("data-hay").indexOf(sQuery) > -1;
+    el.hidden = !(okF && okQ);
+    if (!el.hidden) shown++;
+  });
+  sessCount.textContent = "Showing " + shown + " of 71 recorded sessions";
+}
+renderSessions();
+
+sessList.addEventListener("click", function(e){
+  var btn = e.target.closest(".disc");
+  if (!btn) return;
+  var card = btn.closest(".sess");
+  var body = card.querySelector(".sess-body");
+  var open = body.hidden;
+  body.hidden = !open;
+  card.classList.toggle("open", open);
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+});
+
+document.getElementById("sessSearch").addEventListener("input", function(e){
+  sQuery = e.target.value.trim().toLowerCase();
+  renderSessions();
+});
+Array.prototype.forEach.call(document.querySelectorAll("[data-sfilter]"), function(b){
+  b.addEventListener("click", function(){
+    sFilter = b.getAttribute("data-sfilter");
+    Array.prototype.forEach.call(document.querySelectorAll("[data-sfilter]"), function(o){
+      o.setAttribute("aria-pressed", o === b ? "true" : "false");
+    });
+    renderSessions();
+  });
+});
+
+/* ---------- signal details ---------- */
+var sigList = document.getElementById("sigList");
+var sigCount = document.getElementById("sigCount");
+var sigFilter = "all";
+
+function renderSignals(){
+  var rows = SIGNALS.filter(function(s){
+    return sigFilter === "all" || RATING[s.score] === sigFilter;
+  });
+  sigList.innerHTML = rows.map(function(s){
+    var r = RATING[s.score];
+    return '<details class="sig"><summary>'
+      + '<span class="snm">'+esc(s.sub)+'</span>'
+      + '<span class="scat">'+esc(s.cat)+'</span>'
+      + '<span><span class="pill '+CLS[r]+'">'+r+'</span></span>'
+      + '<span class="sscore">'+s.score.toFixed(1)+' / 5.0</span>'
+      + '<span class="chev">'+chev()+'</span>'
+      + '</summary><div class="sig-body">'
+      + '<dl class="cellbox"><dt>What this signal watches</dt><dd>'+esc(s.desc)+'</dd></dl>'
+      + '<dl class="cellbox"><dt>Where you stand</dt><dd>Rated <strong>'+r+'</strong> across your scored sessions in this cycle. Category: '+esc(s.cat)+'.</dd></dl>'
+      + '<dl class="nudge cellbox"><dt>Nudge for your next session</dt><dd>'+esc(s.pitch)+'</dd></dl>'
+      + '</div></details>';
+  }).join("");
+  sigCount.textContent = rows.length + (rows.length === 1 ? " signal" : " signals") + " · tap any row for the nudge";
+}
+renderSignals();
+Array.prototype.forEach.call(document.querySelectorAll("[data-sigf]"), function(b){
+  b.addEventListener("click", function(){
+    sigFilter = b.getAttribute("data-sigf");
+    Array.prototype.forEach.call(document.querySelectorAll("[data-sigf]"), function(o){
+      o.setAttribute("aria-pressed", o === b ? "true" : "false");
+    });
+    renderSignals();
+  });
+});
+
+/* ---------- tabs ---------- */
+var TABS = ["self-check","sessions","habits","device","help"];
+function showTab(name, push){
+  if (TABS.indexOf(name) < 0) name = "self-check";
+  TABS.forEach(function(t){
+    var id = t === "self-check" ? "self" : t;
+    var btn = document.getElementById("tab-"+id);
+    var panel = document.getElementById("panel-"+id);
+    var on = t === name;
+    btn.setAttribute("aria-selected", on ? "true" : "false");
+    panel.hidden = !on;
+  });
+  if (push && location.hash.slice(1) !== name) location.hash = name;
+  window.scrollTo({top:0,behavior:"auto"});
+}
+Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function(b){
+  b.addEventListener("click", function(){ showTab(b.getAttribute("data-tab"), true); });
+});
+Array.prototype.forEach.call(document.querySelectorAll("[data-goto]"), function(b){
+  b.addEventListener("click", function(){ showTab(b.getAttribute("data-goto"), true); });
+});
+window.addEventListener("hashchange", function(){ showTab(location.hash.slice(1), false); });
+showTab(location.hash.slice(1) || "self-check", false);
+
+/* ---------- help views ---------- */
+var HELPV = {quick:"helpQuick",problem:"helpProblem",feedback:"helpFeedback",contact:"helpContact",sent:"helpSent"};
+function showHelp(v){
+  Object.keys(HELPV).forEach(function(k){
+    document.getElementById(HELPV[k]).hidden = (k !== v);
+  });
+  document.getElementById("reqList").parentElement.hidden = (v === "sent");
+}
+Array.prototype.forEach.call(document.querySelectorAll("[data-help]"), function(b){
+  b.addEventListener("click", function(){ showHelp(b.getAttribute("data-help")); });
+});
+
+/* single-select chipsets */
+Array.prototype.forEach.call(document.querySelectorAll("[data-single]"), function(set){
+  set.addEventListener("click", function(e){
+    var c = e.target.closest(".chip");
+    if (!c) return;
+    Array.prototype.forEach.call(set.querySelectorAll(".chip"), function(o){
+      o.setAttribute("aria-pressed", o === c ? "true" : "false");
+    });
+  });
+});
+
+var ticket = 1043;
+function sent(title, body){
+  var ref = "#SH-" + ticket;
+  document.getElementById("sentTitle").textContent = title;
+  document.getElementById("sentBody").textContent = body;
+  document.getElementById("sentRef").textContent = "Reference " + ref + " · received just now";
+  var steps = document.querySelectorAll("#helpSent .steps .sd");
+  if (steps[0]) steps[0].textContent = ref + " · just now";
+  var row = document.createElement("div");
+  row.className = "req";
+  row.innerHTML = '<div><div class="t">'+esc(title === "Feedback sent" ? "Feedback — scores and insights" : "Reported problem")+'</div>'
+    + '<div class="m">'+ref+' · 28 Oct · device SHC-ABSLI-0417</div></div><span class="pill p-watch">In review</span>';
+  document.getElementById("reqList").insertBefore(row, document.getElementById("reqList").firstChild);
+  ticket++;
+  showHelp("sent");
+}
+document.getElementById("formProblem").addEventListener("submit", function(e){
+  e.preventDefault();
+  sent("Request sent", "Thanks, we've got it. We'll update you here and in your notifications.");
+});
+document.getElementById("formFeedback").addEventListener("submit", function(e){
+  e.preventDefault();
+  sent("Feedback sent", "Thanks — this goes straight to the Sherpa product team. We'll let you know if it ships.");
+});
+
+/* ---------- copy + sync ---------- */
+Array.prototype.forEach.call(document.querySelectorAll("[data-copy]"), function(b){
+  b.addEventListener("click", function(){
+    var txt = b.getAttribute("data-copy"), done = function(){
+      var old = b.textContent; b.textContent = "Copied";
+      setTimeout(function(){ b.textContent = old; }, 1400);
+    };
+    try {
+      navigator.clipboard.writeText(txt).then(done, function(){ select(); });
+    } catch (err) { select(); }
+    function select(){
+      var span = b.parentElement.querySelector("span");
+      if (!span) return;
+      var r = document.createRange(); r.selectNodeContents(span);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      b.textContent = "Select & copy";
+      setTimeout(function(){ b.textContent = "Copy"; }, 1800);
+    }
+  });
+});
+var syncBtn = document.getElementById("syncBtn");
+syncBtn.addEventListener("click", function(){
+  document.getElementById("syncMsg").hidden = false;
+  syncBtn.textContent = "Synced";
+  setTimeout(function(){ syncBtn.textContent = "Sync now"; }, 2000);
+});
+})();
+</script>
+
+</body></html>
